@@ -26,3 +26,4 @@ jobs:
     uses: love-actions/love-actions-core@v1.1.0
     with:
     build-list: ./assets/ ./sti/ ./conf.lua ./main.lua
+    package-path: ./release/game.love
