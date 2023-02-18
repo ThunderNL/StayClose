@@ -42,14 +42,14 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
 end
 
 function love.load()
-  map = sti("map.lua")
-  playerredImg = love.graphics.newImage("spritered.png")
-  playerblueImg = love.graphics.newImage("spriteblue.png")
-  enemyImg = love.graphics.newImage("enemy.png")
+  map = sti("assets/map.lua")
+  playerredImg = love.graphics.newImage("assets/spritered.png")
+  playerblueImg = love.graphics.newImage("assets/spriteblue.png")
+  enemyImg = love.graphics.newImage("assets/enemy.png")
   love.graphics.setLineWidth(2)
   math.randomseed(os.time())
-  smallfont = love.graphics.newFont("font.ttf", 16)
-  bigfont = love.graphics.newFont("font.ttf", 32)
+  smallfont = love.graphics.newFont("assets/font.ttf", 16)
+  bigfont = love.graphics.newFont("assets/font.ttf", 32)
 end
 
 
