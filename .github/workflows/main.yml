@@ -22,8 +22,8 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+    - uses: love-actions/love-actions-core@v1.1.0
     - name: Love actions bare package
-    uses: love-actions/love-actions-core@v1.1.0
     with:
       build-list: ./assets/ ./sti/ ./conf.lua ./main.lua
       package-path: ./release/game.love
