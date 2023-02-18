@@ -1,0 +1,2 @@
+- name: Love actions bare package
+  uses: love-actions/love-actions-core@v1.1.0
