@@ -1,2 +1,5 @@
-- name: Love actions bare package
-  uses: love-actions/love-actions-core@v1.1.0
+- name: Build bare love package
+  uses: love-action/love-actions-core@v1
+  with:
+    build-list: ./assets/ ./frameworks/ ./config.lua ./main.lua
+    package-path: ./bare/my_game.love
