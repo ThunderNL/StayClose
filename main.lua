@@ -1,4 +1,3 @@
-sti = require "sti"
 playerred = {}
 playerred.speed = 100
 playerred.x = 240
@@ -41,7 +40,7 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
 end
 
 function love.load()
-  map = sti("assets/map.lua")
+  map = love.graphics.newImage("assets/map.png")
   playerredImg = love.graphics.newImage("assets/spritered.png")
   playerblueImg = love.graphics.newImage("assets/spriteblue.png")
   enemyImg = love.graphics.newImage("assets/enemy.png")
@@ -55,7 +54,6 @@ end
 
 
 function love.update(dt)
-  map:update(dt)
   enemytimer = enemytimer - 1 * dt
 if lives > 0 then
   if love.keyboard.isDown('w') and playerred.y > 16 then
@@ -153,6 +151,9 @@ if checkCircularCollision(newEnemy.x+8, newEnemy.y+8, playerred.x+8, playerred.y
     if LineCollision(playerred.x, playerred.y, playerblue.x, playerblue.y, newEnemy.x, newEnemy.y) == true then
       table.remove(enemy, i)
       score = score + 1
+      if math.random(1,10) == 1 then
+        lives = lives + 1
+      end
     end
 end
 
@@ -171,7 +172,7 @@ end
 
 function love.draw(dt)
   love.graphics.setColor(darkness,darkness,darkness)
-  map:draw()
+  love.graphics.draw(map)
   love.graphics.setColor(0,0,0)
   love.graphics.line(playerred.x+8, playerred.y+8, playerblue.x+8, playerblue.y+8)
   love.graphics.setColor(darkness,darkness,darkness)
