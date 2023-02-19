@@ -1,5 +1,5 @@
 function love.conf(t)
-    t.window.title = "LÖVE Jam 2023"
+    t.window.title = "StayClose"
     t.window.width = 512
     t.window.height = 512
     t.window.resizable = false

@@ -24,11 +24,10 @@ score = 0
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
 
-function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
-  return x1 < x2+w2 and
-         x2 < x1+w1 and
-         y1 < y2+h2 and
-         y2 < y1+h1
+function checkCircularCollision(ax, ay, bx, by, ar, br)
+	local dx = bx - ax
+	local dy = by - ay
+	return dx^2 + dy^2 < (ar + br)^2
 end
 
 function LineCollision(lx1,ly1, lx2,ly2, x,y)
@@ -94,7 +93,6 @@ darkness = (distance/256*-1)+1
 if enemytimer < 0 and lives > 0 then
   enemytimer = enemytimerMax
   enemy.spawn = true
-  
 end
 
 
@@ -104,20 +102,23 @@ randomSide = math.random(1,4)
 if randomSide == 1 then
   enemy.x = 256
   enemy.y = 16
-  playerTarget = playerred
 elseif randomSide == 2 then
   enemy.x = 480
   enemy.y = 256
-  playerTarget = playerblue
 elseif randomSide == 3 then
   enemy.x = 256
   enemy.y = 480
-  playerTarget = playerred
 elseif randomSide == 4 then
   enemy.x = 16
   enemy.y = 256
-  playerTarget = playerblue
 end
+
+if math.random(1,2) == 1 then
+  playerTarget = playerred
+else
+  playerTarget = playerblue
+  end
+
   newEnemy = {x = enemy.x, y = enemy.y, speed = enemy.speed, target = playerTarget}
   table.insert(enemy, newEnemy)
 
@@ -140,17 +141,15 @@ if lives > 0 then
   end
 end
 
-  if CheckCollision(newEnemy.x, newEnemy.y, 16, 16, playerred.x, playerred.y, 16, 16) then
+
+if checkCircularCollision(newEnemy.x+8, newEnemy.y+8, playerred.x+8, playerred.y+8, 8, 8) then
     table.remove(enemy, i)
     lives = lives - 1
-  elseif CheckCollision(newEnemy.x, newEnemy.y, 16, 16, playerblue.x, playerblue.y, 16, 16) then
+  elseif checkCircularCollision(newEnemy.x+8, newEnemy.y+8, playerblue.x+8, playerblue.y+8, 8, 8) then
     table.remove(enemy, i)
     lives = lives - 1
   end
   
-end
-
-for i, newEnemy in ipairs(enemy) do
     if LineCollision(playerred.x, playerred.y, playerblue.x, playerblue.y, newEnemy.x, newEnemy.y) == true then
       table.remove(enemy, i)
       score = score + 1
@@ -185,8 +184,8 @@ function love.draw(dt)
   
   love.graphics.setColor(1,1,1)
   love.graphics.setFont(smallfont)
-  love.graphics.print(score, 32)
-  love.graphics.print(lives, 468)
+  love.graphics.print("Score: "..score, 32)
+  love.graphics.print("Lives: "..lives, 384)
   if lives < 1 then
     love.graphics.setFont(bigfont)
     love.graphics.print("Press 'R' to restart", 24, 218)
