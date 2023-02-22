@@ -5,5 +5,5 @@ function love.conf(t)
     t.window.resizable = true
     t.window.minwidth = 512
     t.window.minheight = 512
-    t.window.icon = "assets/enemy.png"
+    t.window.icon = "assets/icon.png"
 end

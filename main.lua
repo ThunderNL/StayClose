@@ -11,7 +11,8 @@ playerblue.y =272
 distance = 0
 darkness = 1
 enemy = {}
-enemy.speed = 50
+enemystartspeed = 75
+enemy.speed = enemystartspeed
 enemy.x = 16
 enemy.y = 16
 enemytimerMax = 2
@@ -22,14 +23,14 @@ blueparticles = {}
 enemyparticles = {}
 randomSide = 1
 playerTarget = playerred
-lives = 5
+lives = 3
 score = 0
 highscore = 0
 gameOver = false
 particleTimer = 1000
+mute = false
 
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
-
 
 function checkCircularCollision(ax, ay, bx, by, ar, br)
 	local dx = bx - ax
@@ -48,10 +49,16 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
 end
 
 function love.load()
+  love.graphics.setDefaultFilter("nearest", "nearest")
   map = love.graphics.newImage("assets/map.png")
   playerredImg = love.graphics.newImage("assets/spritered.png")
   playerblueImg = love.graphics.newImage("assets/spriteblue.png")
   enemyImg = love.graphics.newImage("assets/enemy.png")
+  
+  fullHeart = love.graphics.newImage("assets/fullheart.png")
+  emptyHeart = love.graphics.newImage("assets/emptyheart.png")
+  enemyspeed = love.graphics.newImage("assets/enemyspeed.png")
+  emptyspeed = love.graphics.newImage("assets/emptyspeed.png")
   
   particlered = love.graphics.newImage("assets/particlered.png")
   particleblue = love.graphics.newImage("assets/particleblue.png")
@@ -76,19 +83,35 @@ function love.load()
   
   rs.init({width = 512, height = 512, mode = 1})
   rs.setMode(512, 512, {resizable = true})
+  
+  bgm = love.audio.newSource("assets/bgm.wav", "stream") --https://musiclab.chromeexperiments.com/Song-Maker/song/4658393156681728
+  love.audio.play(bgm)
+end
+
+function love.keypressed(key, scancode, isrepeat)
+  if key == "m"  and mute == false then
+    mute = true
+    love.audio.stop(bgm)
+  elseif key == "m" and mute == true then
+    mute = false
+  end
 end
 
 
-
-
 function love.update(dt)
-	redsystem:update(dt)
-	bluesystem:update(dt)
-	enemysystem:update(dt)
-  
+  if mute == false then
+    love.audio.play(bgm)
+  end
+  distance = math.dist(playerred.x,playerred.y, playerblue.x,playerblue.y)
+  darkness = (distance/256*-1)+1
   love.resize = function(w, h)
   rs.resize(w, h)
   end
+  if love.timer.getTime() > 5 then
+	redsystem:update(dt)
+	bluesystem:update(dt)
+	enemysystem:update(dt)
+
   
   enemytimer = enemytimer - 1 * dt
 if lives > 0 then
@@ -118,10 +141,6 @@ end
   playerblue.x = playerblue.x + (playerblue.speed * dt)
 end
 end
-
-distance = math.dist(playerred.x,playerred.y, playerblue.x,playerblue.y)
-darkness = (distance/256*-1)+1
-
 
 
 if enemytimer < 0 and lives > 0 then
@@ -199,13 +218,26 @@ if checkCircularCollision(newEnemy.x+8, newEnemy.y+8, playerred.x+8, playerred.y
       table.insert(enemyparticles, newParticle)
       table.remove(enemy, i)
       score = score + 1
-      if math.random(1,10) == 1 then
+      local randomPower = math.random(1,100)
+      if randomPower < 11 then
         lives = lives + 1
+      elseif randomPower < 21 and randomPower > 10 then
+        enemy.speed = enemy.speed + 5
+      elseif randomPower < 31 and randomPower > 20 then
+        enemy.speed = enemy.speed - 5
+      elseif randomPower == 100 then
+        lives = 5
       end
       local sound = denver.get({waveform='sinus', frequency=660, length=0.2})
       local sound2 = denver.get({waveform='sinus', frequency=330, length=0.4})
       love.audio.play(sound, sound2)
     end
+end
+
+if enemy.speed < 50 then
+  enemy.speed = 50
+elseif enemy.speed > 100 then
+  enemy.speed = 100
 end
 
 for i, newParticle in ipairs(redparticles) do
@@ -232,7 +264,7 @@ end
  if lives < 1 and love.keyboard.isDown('r') then
   enemy= {}
   enemy.speed = 50
-  lives = 5
+  lives = 3
   playerred.x = 240
   playerred.y =240
   playerblue.x = 272
@@ -240,6 +272,7 @@ end
   enemytimer = enemytimerMax
   gameOver = false
   score = 0
+  enemy.speed = enemystartspeed
 end
 
 if lives < 1 and gameOver == false then
@@ -250,8 +283,10 @@ if lives < 1 and gameOver == false then
   love.audio.play(noise)
   gameOver = true
 end
-
-
+if lives > 5 then
+  lives = 5
+end
+end
 end
 
 function love.draw(dt)
@@ -281,14 +316,31 @@ function love.draw(dt)
  end
   
   love.graphics.setColor(1,1,1)
+  for i = 0, 4 do
+    love.graphics.draw(emptyHeart, i * 18 +16)
+  end
+  for i = 0, lives-1 do
+    love.graphics.draw(fullHeart, i * 18 + 16)
+  end
+  for i = 0, 19 do
+    love.graphics.draw(emptyspeed, i * 9 + 256 + 16, 2)
+  end
+  for i = 0, enemy.speed/5-1 do
+    love.graphics.draw(enemyspeed, i * 9 + 256 + 16, 2)
+  end
   love.graphics.setFont(smallfont)
-  love.graphics.print("Score: "..score, 32)
-  love.graphics.print("Lives: "..lives, 384)
+  love.graphics.print("Score: "..score, 128)
+  
+  love.graphics.setFont(bigfont)
   if lives < 1 then
-    love.graphics.setFont(bigfont)
-    love.graphics.print("Press 'R' to restart", 24, 218)
-    love.graphics.print("Score: "..score, 24, 256)
-    love.graphics.print("Highscore: "..highscore, 24, 294)
+    love.graphics.print("Press 'R' to restart", 24, 512 * 1/3)
+    love.graphics.print("Score: "..score, 24, 512 * 1/2)
+    love.graphics.print("Highscore: "..highscore, 24, 512 * 2/3)
+  end
+  if love.timer.getTime() < 5 then
+    love.graphics.print("WASD for red", 24, 512 * 1/3)
+    love.graphics.print("Arrow keys for blue", 24, 512 * 1/2)
+    love.graphics.print("'M' to mute music", 24, 512 * 2/3)
   end
   rs.stop()
 end
