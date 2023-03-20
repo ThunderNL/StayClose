@@ -49,6 +49,11 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
 end
 
 function love.load()
+  if love.filesystem.getInfo("highscore.txt") then
+    local highscoretxt = love.filesystem.read("highscore.txt")
+    highscore = tonumber(highscoretxt)
+  end
+  
   love.graphics.setDefaultFilter("nearest", "nearest")
   map = love.graphics.newImage("assets/map.png")
   playerredImg = love.graphics.newImage("assets/spritered.png")
@@ -278,6 +283,7 @@ end
 if lives < 1 and gameOver == false then
   if score > highscore then
     highscore = score
+    love.filesystem.write("highscore.txt",highscore)
   end
   local noise = denver.get({waveform='whitenoise', length=1})
   love.audio.play(noise)
