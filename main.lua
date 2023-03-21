@@ -1,5 +1,6 @@
-denver = require 'denver'
-rs = require 'resolution_solution'
+local denver = require 'denver'
+local rs = require 'resolution_solution'
+local baton = require 'baton'
 playerred = {}
 playerred.speed = 100
 playerred.x = 240
@@ -29,6 +30,24 @@ highscore = 0
 gameOver = false
 particleTimer = 1000
 mute = false
+
+local input = baton.new {
+  controls = {
+    redleft = {'key:a'},
+    redright = {'key:d'},
+    redup = {'key:w'},
+    reddown = {'key:s'},
+    blueleft = {'key:left'},
+    blueright = {'key:right'},
+    blueup = {'key:up'},
+    bluedown = {'key:down'},
+    mute = {'key:m'}
+  },
+  pairs = {
+    redmove = {'redleft', 'redright', 'redup', 'reddown'},
+    bluemove = {'blueleft', 'blueright', 'blueup', 'bluedown'},
+  }
+}
 
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
@@ -104,6 +123,7 @@ end
 
 
 function love.update(dt)
+  input:update()
   if mute == false then
     love.audio.play(bgm)
   end
