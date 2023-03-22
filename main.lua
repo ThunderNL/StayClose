@@ -1,5 +1,6 @@
-denver = require 'denver'
-rs = require 'resolution_solution'
+local denver = require 'denver'
+local rs = require 'resolution_solution'
+local baton = require 'baton'
 playerred = {}
 playerred.speed = 100
 playerred.x = 240
@@ -30,6 +31,25 @@ gameOver = false
 particleTimer = 1000
 mute = false
 
+local input = baton.new {
+  controls = {
+    redleft = {'key:a'},
+    redright = {'key:d'},
+    redup = {'key:w'},
+    reddown = {'key:s'},
+    blueleft = {'key:left'},
+    blueright = {'key:right'},
+    blueup = {'key:up'},
+    bluedown = {'key:down'},
+    mute = {'key:m'},
+    restart = {'key:r'},
+  },
+  pairs = {
+    redmove = {'redleft', 'redright', 'redup', 'reddown'},
+    bluemove = {'blueleft', 'blueright', 'blueup', 'bluedown'},
+  }
+}
+
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
 function checkCircularCollision(ax, ay, bx, by, ar, br)
@@ -45,6 +65,15 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
   local totalLength = length1 + length2
   if lineLength > totalLength - 1 then
     return true
+  end
+end
+
+function musicmute()
+  if input:pressed 'mute'  and mute == false then
+    mute = true
+    love.audio.stop(bgm)
+  elseif input:pressed 'mute' and mute == true then
+    mute = false
   end
 end
 
@@ -93,17 +122,12 @@ function love.load()
   love.audio.play(bgm)
 end
 
-function love.keypressed(key, scancode, isrepeat)
-  if key == "m"  and mute == false then
-    mute = true
-    love.audio.stop(bgm)
-  elseif key == "m" and mute == true then
-    mute = false
-  end
-end
+
 
 
 function love.update(dt)
+  musicmute()
+  input:update()
   if mute == false then
     love.audio.play(bgm)
   end
@@ -120,29 +144,29 @@ function love.update(dt)
   
   enemytimer = enemytimer - 1 * dt
 if lives > 0 then
-  if love.keyboard.isDown('w') and playerred.y > 16 then
+  if input:down 'redup' and playerred.y > 16 then
      playerred.y = playerred.y - (playerred.speed * dt)
   end
-  if love.keyboard.isDown('s') and playerred.y < 480 then
+  if input:down 'reddown' and playerred.y < 480 then
      playerred.y = playerred.y + (playerred.speed * dt)
   end
-  if love.keyboard.isDown('a') and playerred.x > 16 then
+  if input:down 'redleft' and playerred.x > 16 then
      playerred.x = playerred.x - (playerred.speed * dt)
   end
-  if love.keyboard.isDown('d') and playerred.x < 480 then
+  if input:down 'redright' and playerred.x < 480 then
   playerred.x = playerred.x + (playerred.speed * dt)
 end
 
-  if love.keyboard.isDown('up') and playerblue.y > 16 then
+  if input:down 'blueup' and playerblue.y > 16 then
      playerblue.y = playerblue.y - (playerblue.speed * dt)
   end
-  if love.keyboard.isDown('down') and playerblue.y < 480 then
+  if input:down 'bluedown' and playerblue.y < 480 then
      playerblue.y = playerblue.y + (playerblue.speed * dt)
   end
-  if love.keyboard.isDown('left') and playerblue.x > 16 then
+  if input:down 'blueleft' and playerblue.x > 16 then
      playerblue.x = playerblue.x - (playerblue.speed * dt)
   end
-  if love.keyboard.isDown('right') and playerblue.x < 480 then
+  if input:down 'blueright' and playerblue.x < 480 then
   playerblue.x = playerblue.x + (playerblue.speed * dt)
 end
 end
@@ -266,7 +290,7 @@ for i, newParticle in ipairs(enemyparticles) do
   end
 end
 
- if lives < 1 and love.keyboard.isDown('r') then
+ if lives < 1 and input:pressed 'restart' then
   enemy= {}
   enemy.speed = 50
   lives = 3
