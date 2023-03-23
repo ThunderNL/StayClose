@@ -6,4 +6,6 @@ function love.conf(t)
     t.window.minwidth = 512
     t.window.minheight = 512
     t.window.icon = "assets/icon.png"
+    
+    t.console = false
 end

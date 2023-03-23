@@ -1,6 +1,7 @@
 local denver = require 'denver'
 local rs = require 'resolution_solution'
 local baton = require 'baton'
+local binser = require 'binser'
 playerred = {}
 playerred.speed = 100
 playerred.x = 240
@@ -72,16 +73,37 @@ function musicmute()
   if input:pressed 'mute'  and mute == false then
     mute = true
     love.audio.stop(bgm)
+    savegame()
   elseif input:pressed 'mute' and mute == true then
     mute = false
+    savegame()
   end
 end
 
+function savegame()
+    local savedata = binser.serialize({highscore,mute})
+    love.filesystem.write("savedata.txt",savedata)
+    print("Saved data: "..savedata)
+end
+
 function love.load()
-  if love.filesystem.getInfo("highscore.txt") then
-    local highscoretxt = love.filesystem.read("highscore.txt")
-    highscore = tonumber(highscoretxt)
+
+  
+  if love.filesystem.getInfo("savedata.txt") then
+    local data = binser.deserializeN(love.filesystem.read("savedata.txt"))
+    highscore,mute = data[1],data[2]
+
+    print(highscore)
+    if mute == true then
+      print("muted")
+    elseif mute == false then
+      print("unmuted")
+    else
+      print(mute)
+    end
   end
+  
+  savegame()
   
   love.graphics.setDefaultFilter("nearest", "nearest")
   map = love.graphics.newImage("assets/map.png")
@@ -118,8 +140,8 @@ function love.load()
   rs.init({width = 512, height = 512, mode = 1})
   rs.setMode(512, 512, {resizable = true})
   
-  bgm = love.audio.newSource("assets/bgm.wav", "stream") --https://musiclab.chromeexperiments.com/Song-Maker/song/4658393156681728
-  love.audio.play(bgm)
+  bgm = love.audio.newSource("assets/bgm.wav", "stream")--https://musiclab.chromeexperiments.com/Song-Maker/song/4658393156681728
+
 end
 
 
@@ -307,7 +329,7 @@ end
 if lives < 1 and gameOver == false then
   if score > highscore then
     highscore = score
-    love.filesystem.write("highscore.txt",highscore)
+    savegame()
   end
   local noise = denver.get({waveform='whitenoise', length=1})
   love.audio.play(noise)
