@@ -32,23 +32,21 @@ gameOver = false
 particleTimer = 1000
 mute = false
 
+
 local input = baton.new {
   controls = {
-    redleft = {'key:a'},
-    redright = {'key:d'},
-    redup = {'key:w'},
-    reddown = {'key:s'},
-    blueleft = {'key:left'},
-    blueright = {'key:right'},
-    blueup = {'key:up'},
-    bluedown = {'key:down'},
-    mute = {'key:m'},
-    restart = {'key:r'},
+    redleft = {'key:a', 'button:dpleft', 'axis:leftx-'},
+    redright = {'key:d', 'button:dpright', 'axis:leftx+'},
+    redup = {'key:w', 'button:dpup', 'axis:lefty-'},
+    reddown = {'key:s', 'button:dpdown', 'axis:lefty+'},
+    blueleft = {'key:left', 'button:x', 'axis:rightx-'},
+    blueright = {'key:right', 'button:b', 'axis:rightx+'},
+    blueup = {'key:up', 'button:y', 'axis:righty-'},
+    bluedown = {'key:down', 'button:a', 'axis:righty+'},
+    mute = {'key:m', 'button:back'},
+    restart = {'key:r', 'button:start'},
   },
-  pairs = {
-    redmove = {'redleft', 'redright', 'redup', 'reddown'},
-    bluemove = {'blueleft', 'blueright', 'blueup', 'bluedown'},
-  }
+  joystick = love.joystick.getJoysticks()[1],
 }
 
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
@@ -264,7 +262,7 @@ if checkCircularCollision(newEnemy.x+8, newEnemy.y+8, playerred.x+8, playerred.y
       love.audio.play(sound, sound2)
   end
   
-    if LineCollision(playerred.x, playerred.y, playerblue.x, playerblue.y, newEnemy.x, newEnemy.y) == true then
+    if LineCollision(playerred.x, playerred.y, playerblue.x, playerblue.y, newEnemy.x, newEnemy.y) then
       newParticle = {x = newEnemy.x, y = newEnemy.y, timer = particleTimer}
       table.insert(enemyparticles, newParticle)
       table.remove(enemy, i)
@@ -326,11 +324,12 @@ end
   enemy.speed = enemystartspeed
 end
 
+if score > highscore then
+  highscore = score
+  savegame()
+end
+
 if lives < 1 and gameOver == false then
-  if score > highscore then
-    highscore = score
-    savegame()
-  end
   local noise = denver.get({waveform='whitenoise', length=1})
   love.audio.play(noise)
   gameOver = true
