@@ -1,7 +1,7 @@
-local denver = require 'denver'
-local rs = require 'resolution_solution'
-local baton = require 'baton'
-local binser = require 'binser'
+local denver = require 'libraries.denver'
+local rs = require 'libraries.resolution_solution'
+local baton = require 'libraries.baton'
+local binser = require 'libraries.binser'
 playerred = {}
 playerred.speed = 100
 playerred.x = 240
@@ -90,7 +90,7 @@ function love.load()
   if love.filesystem.getInfo("savedata.txt") then
     local data = binser.deserializeN(love.filesystem.read("savedata.txt"))
     highscore,mute = data[1],data[2]
-
+    
     print(highscore)
     if mute == true then
       print("muted")
