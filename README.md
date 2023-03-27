@@ -1,5 +1,7 @@
 # StayClose
 
+![GitHub](https://img.shields.io/github/license/ThunderNL/StayClose) ![GitHub top language](https://img.shields.io/github/languages/top/ThunderNL/StayClose) ![GitHub last commit](https://img.shields.io/github/last-commit/ThunderNL/StayClose)
+
 # https://thundernl.itch.io/stayclose
 
 ## Features
