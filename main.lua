@@ -1,7 +1,11 @@
+--================================LIBRARIES================================--
 local denver = require 'libraries.denver'
 local rs = require 'libraries.resolution_solution'
 local baton = require 'libraries.baton'
 local binser = require 'libraries.binser'
+local urutora = require 'libraries.urutora'
+
+--================================VARIABLES================================--
 playerred = {}
 playerred.speed = 100
 playerred.x = 240
@@ -31,8 +35,11 @@ highscore = 0
 gameOver = false
 particleTimer = 1000
 mute = false
+paused = true
 
 
+
+--================================BATON INPUTS================================--
 local input = baton.new {
   controls = {
     redleft = {'key:a', 'button:dpleft', 'axis:leftx-'},
@@ -49,6 +56,58 @@ local input = baton.new {
   joystick = love.joystick.getJoysticks()[1],
 }
 
+--================================URUTORA================================--
+
+local u = urutora:new()
+
+function love.mousepressed(x, y, button) u:pressed(x, y, button) end
+function love.mousemoved(x, y, dx, dy) u:moved(x, y, dx, dy) end
+function love.mousereleased(x, y, button) u:released(x, y, button) end
+function love.textinput(text) u:textinput(text) end
+function love.keypressed(k, scancode, isrepeat) u:keypressed(k, scancode, isrepeat) end
+function love.wheelmoved(x, y) u:wheelmoved(x, y) end
+
+function urutoraInit()
+    u.setDefaultFont(bigfont)
+    local bgColor = {0.2, 0.2, 0.7, 1}
+  
+  clickMe = u.button({
+    text = "PAUSE/RESUME",
+    x = 50, y = 50,
+    w = 150, h = 50,
+  }):action(function()
+    paused = not paused
+  end
+  )
+  
+  startLabel = u.label({
+      text = "aabbcc",
+      w = 150, h = 50,
+    })
+  
+  StayCloseImage = u.image({
+      image = StayCloseIcon,
+      w = 50, h = 50
+    })
+
+  
+  startPanel = u.panel({
+      x = 50, y = 50,
+      w = 402, h = 402,
+      rows = 3, cols = 3,
+      bgColor = bgColor
+    }):addAt(1, 1, StayCloseImage)
+      :setStyle({ font = bigfont })
+      :addAt(1, 2, startLabel)
+      :colspanAt(3, 1, 3)
+      :addAt(3, 1, clickMe)
+  
+  u:add(startPanel)
+  
+end
+
+
+--================================MATH FUNCTIONS================================--
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
 function checkCircularCollision(ax, ay, bx, by, ar, br)
@@ -67,8 +126,9 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
   end
 end
 
+--================================MUSIC MUTE FUNCTION================================--
 function musicmute()
-  if input:pressed 'mute'  and mute == false then
+  if input:pressed 'mute' and mute == false then
     mute = true
     love.audio.stop(bgm)
     savegame()
@@ -78,18 +138,23 @@ function musicmute()
   end
 end
 
+--================================SAVE FUNCTION================================--
 function savegame()
-    local savedata = binser.serialize({highscore,mute})
+    local savedata = binser.serialize({["hs"] = highscore,["m"] = mute})
     love.filesystem.write("savedata.txt",savedata)
     print("Saved data: "..savedata)
 end
 
+--================================LOVE LOAD================================--
 function love.load()
+  love.graphics.setDefaultFilter("nearest", "nearest")
+  smallfont = love.graphics.newFont("assets/font.ttf", 16)
+  bigfont = love.graphics.newFont("assets/font.ttf", 32)
+  nofont = love.graphics.newFont("assets/font.ttf", 1)
 
-  
   if love.filesystem.getInfo("savedata.txt") then
     local data = binser.deserializeN(love.filesystem.read("savedata.txt"))
-    highscore,mute = data[1],data[2]
+    highscore,mute = data["hs"],data["m"]
     
     print(highscore)
     if mute == true then
@@ -102,8 +167,8 @@ function love.load()
   end
   
   savegame()
-  
-  love.graphics.setDefaultFilter("nearest", "nearest")
+
+  StayCloseIcon = love.graphics.newImage("assets/icon.png")
   map = love.graphics.newImage("assets/map.png")
   playerredImg = love.graphics.newImage("assets/spritered.png")
   playerblueImg = love.graphics.newImage("assets/spriteblue.png")
@@ -117,46 +182,53 @@ function love.load()
   particlered = love.graphics.newImage("assets/particlered.png")
   particleblue = love.graphics.newImage("assets/particleblue.png")
   particleenemy = love.graphics.newImage("assets/particleenemy.png")
-  redsystem = love.graphics.newParticleSystem(particlered, 10)
-  bluesystem = love.graphics.newParticleSystem(particleblue, 10)
-  enemysystem = love.graphics.newParticleSystem(particleenemy, 10)
-  redsystem:setParticleLifetime(1, 5)
-  bluesystem:setParticleLifetime(1, 5)
-  enemysystem:setParticleLifetime(1, 5)
-	redsystem:setEmissionRate(50)
-	bluesystem:setEmissionRate(50)
-	enemysystem:setEmissionRate(50)
-	redsystem:setLinearAcceleration(-10, -10, 10, 10)
-	bluesystem:setLinearAcceleration(-10, -10, 10, 10)
-	enemysystem:setLinearAcceleration(-10, -10, 10, 10)
+  local buffer = 1000
+  redsystem = love.graphics.newParticleSystem(particlered, buffer)
+  bluesystem = love.graphics.newParticleSystem(particleblue, buffer)
+  enemysystem = love.graphics.newParticleSystem(particleenemy, buffer)
+  local min, max = 1, 3
+  redsystem:setParticleLifetime(min, max)
+  bluesystem:setParticleLifetime(min, max)
+  enemysystem:setParticleLifetime(min, max)
+  local rate = 5
+	redsystem:setEmissionRate(rate)
+	bluesystem:setEmissionRate(rate)
+	enemysystem:setEmissionRate(rate)
+  local accel = 20
+	redsystem:setLinearAcceleration(-accel, -accel, accel, accel)
+	bluesystem:setLinearAcceleration(-accel, -accel, accel, accel)
+	enemysystem:setLinearAcceleration(-accel, -accel, accel, accel)
   
   love.graphics.setLineWidth(2)
   math.randomseed(os.time())
-  smallfont = love.graphics.newFont("assets/font.ttf", 16)
-  bigfont = love.graphics.newFont("assets/font.ttf", 32)
   
   rs.init({width = 512, height = 512, mode = 1})
   rs.setMode(512, 512, {resizable = true})
   
   bgm = love.audio.newSource("assets/bgm.wav", "stream")--https://musiclab.chromeexperiments.com/Song-Maker/song/4658393156681728
 
+  urutoraInit()
+
 end
 
 
-
-
+--================================LOVE UPDATE================================--
 function love.update(dt)
+
+  u:update(dt)
   musicmute()
   input:update()
+  
   if mute == false then
     love.audio.play(bgm)
   end
+  
   distance = math.dist(playerred.x,playerred.y, playerblue.x,playerblue.y)
   darkness = (distance/256*-1)+1
   love.resize = function(w, h)
   rs.resize(w, h)
   end
-  if love.timer.getTime() > 5 then
+  if not paused then
 	redsystem:update(dt)
 	bluesystem:update(dt)
 	enemysystem:update(dt)
@@ -340,8 +412,10 @@ end
 end
 end
 
+----================================LOVE DRAW================================--
 function love.draw(dt)
   rs.start()
+  
   love.graphics.setColor(darkness,darkness,darkness)
   love.graphics.draw(map)
   love.graphics.setColor(0,0,0)
@@ -388,10 +462,16 @@ function love.draw(dt)
     love.graphics.print("Score: "..score, 24, 512 * 1/2)
     love.graphics.print("Highscore: "..highscore, 24, 512 * 2/3)
   end
-  if love.timer.getTime() < 5 then
+  --[[if paused then
     love.graphics.print("WASD for red", 24, 512 * 1/3)
     love.graphics.print("Arrow keys for blue", 24, 512 * 1/2)
     love.graphics.print("'M' to mute music", 24, 512 * 2/3)
-  end
+  end]]
+  
   rs.stop()
+
+  if paused then
+    u:draw()
+  end
+
 end
