@@ -4,5 +4,6 @@ build_directory = "build"
 
 love_files = [
     "*/assets/*",
+	"*/libraries/*",
     "*.lua",
 ]

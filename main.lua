@@ -52,6 +52,7 @@ local input = baton.new {
     bluedown = {'key:down', 'button:a', 'axis:righty+'},
     mute = {'key:m', 'button:back'},
     restart = {'key:r', 'button:start'},
+    pause = {'key:space'},
   },
   joystick = love.joystick.getJoysticks()[1],
 }
@@ -68,11 +69,11 @@ function love.keypressed(k, scancode, isrepeat) u:keypressed(k, scancode, isrepe
 function love.wheelmoved(x, y) u:wheelmoved(x, y) end
 
 function urutoraInit()
-    u.setDefaultFont(bigfont)
+    u.setDefaultFont(smallfont)
     local bgColor = {0.2, 0.2, 0.7, 1}
   
-  clickMe = u.button({
-    text = "PAUSE/RESUME",
+  local pauseButton = u.button({
+    text = "PAUSE/RESUME\n(SPACE)",
     x = 50, y = 50,
     w = 150, h = 50,
   }):action(function()
@@ -80,32 +81,30 @@ function urutoraInit()
   end
   )
   
-  startLabel = u.label({
-      text = "aabbcc",
-      w = 150, h = 50,
-    })
+  local muteToggle = u.button({
+      text = "Music\n(M)"
+      }):action(function()musicmute()end)
   
-  StayCloseImage = u.image({
+  local StayCloseImage = u.image({
       image = StayCloseIcon,
       w = 50, h = 50
     })
 
-  
-  startPanel = u.panel({
+  local startPanel = u.panel({
+      --debug = true,
       x = 50, y = 50,
       w = 402, h = 402,
       rows = 3, cols = 3,
       bgColor = bgColor
-    }):addAt(1, 1, StayCloseImage)
-      :setStyle({ font = bigfont })
-      :addAt(1, 2, startLabel)
+      })
+      :addAt(1, 2, StayCloseImage)
       :colspanAt(3, 1, 3)
-      :addAt(3, 1, clickMe)
+      :addAt(3, 1, pauseButton)
+      :addAt(1, 3, muteToggle)
   
   u:add(startPanel)
   
 end
-
 
 --================================MATH FUNCTIONS================================--
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
@@ -126,15 +125,12 @@ function LineCollision(lx1,ly1, lx2,ly2, x,y)
   end
 end
 
---================================MUSIC MUTE FUNCTION================================--
+--================================MUSIC FUNCTION================================--
 function musicmute()
-  if input:pressed 'mute' and mute == false then
-    mute = true
+  mute = not mute
+  savegame()
+  if mute == true then
     love.audio.stop(bgm)
-    savegame()
-  elseif input:pressed 'mute' and mute == true then
-    mute = false
-    savegame()
   end
 end
 
@@ -150,7 +146,6 @@ function love.load()
   love.graphics.setDefaultFilter("nearest", "nearest")
   smallfont = love.graphics.newFont("assets/font.ttf", 16)
   bigfont = love.graphics.newFont("assets/font.ttf", 32)
-  nofont = love.graphics.newFont("assets/font.ttf", 1)
 
   if love.filesystem.getInfo("savedata.txt") then
     local data = binser.deserializeN(love.filesystem.read("savedata.txt"))
@@ -214,10 +209,15 @@ end
 
 --================================LOVE UPDATE================================--
 function love.update(dt)
-
+  
   u:update(dt)
-  musicmute()
   input:update()
+  
+  if input:pressed 'mute' then
+    musicmute()
+  elseif input:pressed 'pause' then
+    paused = not paused
+  end
   
   if mute == false then
     love.audio.play(bgm)
@@ -414,6 +414,7 @@ end
 
 ----================================LOVE DRAW================================--
 function love.draw(dt)
+
   rs.start()
   
   love.graphics.setColor(darkness,darkness,darkness)
