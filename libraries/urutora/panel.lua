@@ -286,10 +286,10 @@ function panel:draw()
   lg.translate(-tx, -ty)
   _drawScrollIndicator(self, ox, oy)
 
-  if true or self.parent then
+  --[[if true or self.parent then
     love.graphics.setColor(1,1,1)
     love.graphics.print(self.oy or '', self.x, self.y)
-  end
+  end]]
 
   lg.setScissor(scx, scy, csx, cellHeight)
   lg.pop()

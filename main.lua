@@ -5,6 +5,9 @@ local baton = require 'libraries.baton'
 local binser = require 'libraries.binser'
 local urutora = require 'libraries.urutora'
 
+local enet = require "enet"
+local host = enet.host_create("localhost:4178")
+
 --================================VARIABLES================================--
 playerred = {}
 playerred.speed = 100
@@ -37,8 +40,6 @@ particleTimer = 1000
 mute = false
 paused = true
 
-
-
 --================================BATON INPUTS================================--
 local input = baton.new {
   controls = {
@@ -54,7 +55,7 @@ local input = baton.new {
     restart = {'key:r', 'button:start'},
     pause = {'key:space'},
   },
-  joystick = love.joystick.getJoysticks()[1],
+  joystick = love.joystick.getJoysticks()[1]
 }
 
 --================================URUTORA================================--
@@ -69,13 +70,24 @@ function love.keypressed(k, scancode, isrepeat) u:keypressed(k, scancode, isrepe
 function love.wheelmoved(x, y) u:wheelmoved(x, y) end
 
 function urutoraInit()
-    u.setDefaultFont(smallfont)
-    local bgColor = {0.2, 0.2, 0.7, 1}
+  if love.graphics.getWidth() > love.graphics.getHeight() then
+    size = love.graphics.getHeight()*4/5
+  elseif love.graphics.getWidth() < love.graphics.getHeight() then
+    size = love.graphics.getWidth()*4/5
+  elseif love.graphics.getWidth() == love.graphics.getHeight() then
+    size = love.graphics.getWidth()*4/5
+  end
+  
+  local startPanelX = love.graphics.getWidth()/2-size/2
+  local startPanelY = love.graphics.getHeight()/2-size/2
+  
+  local urutoraFont = love.graphics.newFont("assets/font.ttf", size/32)
+  u.setDefaultFont(urutoraFont)
+  
+  local bgColor = {0.2, 0.4, 0.8}
   
   local pauseButton = u.button({
-    text = "PAUSE/RESUME\n(SPACE)",
-    x = 50, y = 50,
-    w = 150, h = 50,
+    text = "PAUSE/RESUME\n(SPACE)"
   }):action(function()
     paused = not paused
   end
@@ -85,22 +97,45 @@ function urutoraInit()
       text = "Music\n(M)"
       }):action(function()musicmute()end)
   
-  local StayCloseImage = u.image({
-      image = StayCloseIcon,
-      w = 50, h = 50
+  hostAddress = host:get_socket_address():sub(1, -6)
+  print(hostAddress.." ("..host:get_socket_address()..")")
+  
+  local hostPanel = u.panel({
+    --debug = true,
+    rows = 3, cols = 1,
+    bgColor = bgColor
     })
+    :addAt(1, 1, u.label({text = "Host:"}))
+    :addAt(2, 1, u.label({text = hostAddress}))
+    :addAt(3, 1, u.button({text = "Host! (WIP)"}))
+    
+  
+  ipInput = u.text({text = "Input IP here"})
+  
+  local clientPanel = u.panel({
+      --debug = true,
+      rows = 3, cols = 1,
+      bgColor = bgColor
+      })
+      :addAt(1, 1, u.label({text = "Connect:"}))
+      :addAt(2, 1, ipInput:action(function()print("Typed IP: "..ipInput.text)end))
+      :addAt(3, 1, u.button({text = "Connect! (Not Working Yet)"}))
 
+  
   local startPanel = u.panel({
       --debug = true,
-      x = 50, y = 50,
-      w = 402, h = 402,
+      x = startPanelX, y = startPanelY,
+      w = size, h = size,
       rows = 3, cols = 3,
       bgColor = bgColor
       })
-      :addAt(1, 2, StayCloseImage)
-      :colspanAt(3, 1, 3)
-      :addAt(3, 1, pauseButton)
-      :addAt(1, 3, muteToggle)
+      :colspanAt(3, 2, 2)
+      :colspanAt(2, 2, 2)
+      :addAt(2, 1, hostPanel)
+      :addAt(2, 2, clientPanel)
+      :addAt(1, 2, u.image({image = StayCloseIcon}))
+      :addAt(3, 2, pauseButton)
+      :addAt(3, 1, muteToggle)
   
   u:add(startPanel)
   
@@ -197,12 +232,12 @@ function love.load()
   love.graphics.setLineWidth(2)
   math.randomseed(os.time())
   
-  rs.init({width = 512, height = 512, mode = 1})
-  rs.setMode(512, 512, {resizable = true})
-  
   bgm = love.audio.newSource("assets/bgm.wav", "stream")--https://musiclab.chromeexperiments.com/Song-Maker/song/4658393156681728
 
   urutoraInit()
+
+  rs.init({width = 512, height = 512, mode = 1})
+  rs.setMode(love.graphics.getWidth(), love.graphics.getHeight(), {resizable = true})
 
 end
 
